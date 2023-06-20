@@ -1,0 +1,47 @@
+service: serverless-openai-chatgpt-stream
+
+frameworkVersion: '3'
+
+useDotenv: true
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-offline
+  - serverless-plugin-resource-tagging
+
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: eu-west-2
+  timeout: 30
+  memorySize: 256
+  logRetentionInDays: 90
+  environment:
+  apiGateway:
+    shouldStartNameWithService: true
+  stackTags:
+    ENVIRONMENT: "${sls:stage}"
+    PROJECT: "${self:service}"
+
+
+functions:
+  chatStream:
+    handler: src/handlers/chat.chatStream
+    timeout: 90
+    url:
+      cors: true
+      invokeMode: RESPONSE_STREAM
+    environment:
+      OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+
+#resources:
+#  Resources:
+#    ChatStreamLambdaFunctionUrl:
+#      Properties:
+#        InvokeMode: RESPONSE_STREAM
+custom:
+  logLevelMap:
+    prod: info
+    staging: info
+  logLevel: ${self:custom.logLevelMap.${sls:stage}, 'debug'}
